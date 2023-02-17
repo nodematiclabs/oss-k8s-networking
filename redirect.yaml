@@ -1,0 +1,113 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: before
+  annotations:
+    # nginx.ingress.kubernetes.io/permanent-redirect: http://after.example.com
+    nginx.ingress.kubernetes.io/permanent-redirect: http://after.example.com$request_uri
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: before.example.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: before
+            port:
+              number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: after
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: after.example.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: after
+            port:
+              number: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: before
+spec:
+  type: ClusterIP
+  selector:
+    app: before
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: before
+  labels:
+    app: before
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: before
+  template:
+    metadata:
+      labels:
+        app: before
+    spec:
+      containers:
+      - name: echo
+        image: mendhak/http-https-echo:latest
+        env:
+        - name: HTTP_PORT
+          value: "8080"
+        - name: HTTPS_PORT
+          value: "8443"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: after
+spec:
+  type: ClusterIP
+  selector:
+    app: after
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: after
+  labels:
+    app: after
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: after
+  template:
+    metadata:
+      labels:
+        app: after
+    spec:
+      containers:
+      - name: echo
+        image: mendhak/http-https-echo:latest
+        env:
+        - name: HTTP_PORT
+          value: "8080"
+        - name: HTTPS_PORT
+          value: "8443"

@@ -1,0 +1,102 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hosts
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: one.example.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: one
+            port:
+              number: 80
+  - host: two.example.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: two
+            port:
+              number: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: one
+spec:
+  type: ClusterIP
+  selector:
+    app: one
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: one
+  labels:
+    app: one
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: one
+  template:
+    metadata:
+      labels:
+        app: one
+    spec:
+      containers:
+      - name: echo
+        image: mendhak/http-https-echo:latest
+        env:
+        - name: HTTP_PORT
+          value: "8080"
+        - name: HTTPS_PORT
+          value: "8443"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: two
+spec:
+  type: ClusterIP
+  selector:
+    app: two
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: two
+  labels:
+    app: two
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: two
+  template:
+    metadata:
+      labels:
+        app: two
+    spec:
+      containers:
+      - name: echo
+        image: mendhak/http-https-echo:latest
+        env:
+        - name: HTTP_PORT
+          value: "8080"
+        - name: HTTPS_PORT
+          value: "8443"

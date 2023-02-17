@@ -1,0 +1,113 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cookies-unmatch
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: cookies.example.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: cookie-unmatch
+            port:
+              number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cookies-match
+  annotations:
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-by-cookie: "Example"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: cookies.example.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: cookie-match
+            port:
+              number: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cookie-match
+spec:
+  type: ClusterIP
+  selector:
+    app: cookie-match
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cookie-match
+  labels:
+    app: cookie-match
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cookie-match
+  template:
+    metadata:
+      labels:
+        app: cookie-match
+    spec:
+      containers:
+      - name: echo
+        image: mendhak/http-https-echo:latest
+        env:
+        - name: HTTP_PORT
+          value: "8080"
+        - name: HTTPS_PORT
+          value: "8443"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cookie-unmatch
+spec:
+  type: ClusterIP
+  selector:
+    app: cookie-unmatch
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cookie-unmatch
+  labels:
+    app: cookie-unmatch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cookie-unmatch
+  template:
+    metadata:
+      labels:
+        app: cookie-unmatch
+    spec:
+      containers:
+      - name: echo
+        image: mendhak/http-https-echo:latest
+        env:
+        - name: HTTP_PORT
+          value: "8080"
+        - name: HTTPS_PORT
+          value: "8443"
