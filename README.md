@@ -59,4 +59,6 @@ Apply any test ingress configurations:
 4. `kubectl apply -f query-parameters.yaml`
 5. `kubectl apply -f regex.yaml`
 
+Set a DNS A record for the ingress domains
+
 (If testing the cookies ingress, run `document.cookie='Example=always'` in your browser console)
